@@ -1,17 +1,23 @@
 import os, time, requests
 from datetime import datetime
-from msal import PublicClientApplication
+from msal import ConfidentialClientApplication
 
+TENANT       = "e752f42c-b793-44a0-821a-1ce42bcf7ac3"
+CLIENT_ID    = "e74475f7-95e5-4968-a21f-0b91b4834491"
+CLIENT_SECRET = os.environ["AZURE_CLIENT_SECRET"]
 USERNAME     = os.environ["PBI_USERNAME"]
 PASSWORD     = os.environ["PBI_PASSWORD"]
-TENANT       = "iterinvestimentos.com.br"
-CLIENT_ID    = "04b07795-8ddb-461a-bbee-02f9e1bf7b46"
+
 WORKSPACE_ID = "234f9d81-3fd0-4618-9c73-70d9415096ff"
 DATASET_ID   = "8d2bbc21-b203-4d2e-b468-fe4d8ddefef4"
 SCOPES       = ["https://analysis.windows.net/powerbi/api/.default"]
 
 def get_token():
-    app = PublicClientApplication(CLIENT_ID, authority=f"https://login.microsoftonline.com/{TENANT}")
+    app = ConfidentialClientApplication(
+        CLIENT_ID,
+        authority=f"https://login.microsoftonline.com/{TENANT}",
+        client_credential=CLIENT_SECRET
+    )
     result = app.acquire_token_by_username_password(USERNAME, PASSWORD, scopes=SCOPES)
     if "access_token" not in result:
         raise Exception(f"[ERRO] Autenticacao falhou: {result.get('error_description')}")
