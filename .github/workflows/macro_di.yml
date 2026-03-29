@@ -1,0 +1,64 @@
+name: Relatorio Macro DI Futuro
+
+on:
+  schedule:
+    - cron: '0 22 * * 1-5'  # Todo dia util as 19h BRT (UTC-3)
+  workflow_dispatch:          # Permite rodar manualmente
+
+jobs:
+  executar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias Python
+        run: pip install requests pandas openpyxl google-cloud-bigquery msal db-dtypes
+
+      - name: Configurar credenciais GCP
+        run: |
+          echo '${{ secrets.GCP_CREDENTIALS }}' > gcp-key.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$PWD/gcp-key.json" >> $GITHUB_ENV
+
+      - name: Etapa 1 - Coletar dados B3
+        working-directory: 01.Relatorio_Macro_DI/01Scripts
+        run: python MacroDiFut_2_ConsultB3_API.py
+
+      - name: Etapa 2 - Inserir no BigQuery
+        working-directory: 01.Relatorio_Macro_DI/01Scripts
+        run: python MacroDiFut_3_TblBq.py
+
+      - name: Etapa 3 - Atualizar dataset Power BI
+        working-directory: 01.Relatorio_Macro_DI/01Scripts
+        env:
+          PBI_USERNAME: ${{ secrets.PBI_USERNAME }}
+          PBI_PASSWORD: ${{ secrets.PBI_PASSWORD }}
+        run: python MacroDiFut_4_PBi_API.py
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependencias Node
+        working-directory: 01.Relatorio_Macro_DI/01Scripts
+        run: npm install puppeteer form-data
+
+      - name: Etapa 4 - Exportar PDF e enviar Telegram
+        working-directory: 01.Relatorio_Macro_DI/01Scripts
+        env:
+          PBI_USERNAME:      ${{ secrets.PBI_USERNAME }}
+          PBI_PASSWORD:      ${{ secrets.PBI_PASSWORD }}
+          TELEGRAM_TOKEN:    ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID:  ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: node export_pdf.js
+
+      - name: Limpar credenciais
+        if: always()
+        run: rm -f gcp-key.json
