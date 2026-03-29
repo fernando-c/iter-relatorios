@@ -34,13 +34,6 @@ jobs:
         working-directory: 01.Relatorio_Macro_DI/01Scripts
         run: python MacroDiFut_3_TblBq.py
 
-      - name: Etapa 3 - Atualizar dataset Power BI
-        working-directory: 01.Relatorio_Macro_DI/01Scripts
-        env:
-          PBI_USERNAME: ${{ secrets.PBI_USERNAME }}
-          PBI_PASSWORD: ${{ secrets.PBI_PASSWORD }}
-        run: python MacroDiFut_4_PBi_API.py
-
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
@@ -50,13 +43,13 @@ jobs:
         working-directory: 01.Relatorio_Macro_DI/01Scripts
         run: npm install puppeteer form-data
 
-      - name: Etapa 4 - Exportar PDF e enviar Telegram
+      - name: Etapa 3 - Exportar PDF e enviar Telegram
         working-directory: 01.Relatorio_Macro_DI/01Scripts
         env:
-          PBI_USERNAME:      ${{ secrets.PBI_USERNAME }}
-          PBI_PASSWORD:      ${{ secrets.PBI_PASSWORD }}
-          TELEGRAM_TOKEN:    ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_CHAT_ID:  ${{ secrets.TELEGRAM_CHAT_ID }}
+          PBI_USERNAME:     ${{ secrets.PBI_USERNAME }}
+          PBI_PASSWORD:     ${{ secrets.PBI_PASSWORD }}
+          TELEGRAM_TOKEN:   ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: node export_pdf.js
 
       - name: Limpar credenciais
