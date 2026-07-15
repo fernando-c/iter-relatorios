@@ -1,0 +1,587 @@
+<title>Iter · Monitor Operacional — mockup</title>
+<style>
+  /* ───────────────────────── tokens ───────────────────────── */
+  :root{
+    --bg:#EEF1F4; --surface:#FBFCFD; --surface2:#F1F4F7; --line:#DCE3E9;
+    --ink:#22303C; --ink2:#5C6B79; --ink3:#8795A3;
+    --accent:#4353B8; --accent-soft:#4353B822;
+    --ok:#1F7A4D; --warn:#A16E00; --crit:#C24141; --access:#8A5F9E; --idle:#77848F;
+    --shadow:0 1px 2px rgba(15,25,35,.06),0 4px 16px rgba(15,25,35,.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0F151C; --surface:#151C24; --surface2:#1B242E; --line:#25303C;
+      --ink:#E6ECF2; --ink2:#93A1B0; --ink3:#5F6E7C;
+      --accent:#8B9CE8; --accent-soft:#8B9CE826;
+      --ok:#57B87B; --warn:#E3A93C; --crit:#E36B6B; --access:#BC85BF; --idle:#77848F;
+      --shadow:0 1px 2px rgba(0,0,0,.35),0 6px 20px rgba(0,0,0,.25);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0F151C; --surface:#151C24; --surface2:#1B242E; --line:#25303C;
+    --ink:#E6ECF2; --ink2:#93A1B0; --ink3:#5F6E7C;
+    --accent:#8B9CE8; --accent-soft:#8B9CE826;
+    --ok:#57B87B; --warn:#E3A93C; --crit:#E36B6B; --access:#BC85BF; --idle:#77848F;
+    --shadow:0 1px 2px rgba(0,0,0,.35),0 6px 20px rgba(0,0,0,.25);
+  }
+  :root[data-theme="light"]{
+    --bg:#EEF1F4; --surface:#FBFCFD; --surface2:#F1F4F7; --line:#DCE3E9;
+    --ink:#22303C; --ink2:#5C6B79; --ink3:#8795A3;
+    --accent:#4353B8; --accent-soft:#4353B822;
+    --ok:#1F7A4D; --warn:#A16E00; --crit:#C24141; --access:#8A5F9E; --idle:#77848F;
+    --shadow:0 1px 2px rgba(15,25,35,.06),0 4px 16px rgba(15,25,35,.05);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:14px/1.55 -apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:ui-monospace,"Cascadia Code","SF Mono",Consolas,Menlo,monospace;
+        font-variant-numeric:tabular-nums}
+  .app{max-width:1180px;margin:0 auto;padding:0 20px 28px}
+
+  /* ───────────────────────── topbar ───────────────────────── */
+  .topbar{
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+    padding:14px 0 12px;border-bottom:1px solid var(--line);margin-bottom:18px;
+  }
+  .brand{display:flex;align-items:baseline;gap:10px}
+  .brand .mark{
+    font-family:ui-monospace,"Cascadia Code",Consolas,monospace;
+    font-weight:700;font-size:17px;letter-spacing:.18em;color:var(--accent);
+  }
+  .brand .sub{font-size:13px;color:var(--ink2)}
+  .top-meta{margin-left:auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .clock{font-size:13px;color:var(--ink2)}
+  .clock b{color:var(--ink);font-weight:600}
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:11.5px;padding:3px 9px;border-radius:99px;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink2);
+  }
+  .chip .dot{width:6px;height:6px;border-radius:99px;background:var(--ok)}
+  .theme-btn{
+    border:1px solid var(--line);background:var(--surface);color:var(--ink2);
+    border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;
+  }
+  .theme-btn:hover{color:var(--ink)}
+  .theme-btn:focus-visible,.rot-head:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  /* ───────────────────────── stat tiles ───────────────────────── */
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  .tile{
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:14px 16px 12px;box-shadow:var(--shadow);
+    display:flex;flex-direction:column;gap:2px;
+  }
+  .tile .label{
+    font-family:ui-monospace,Consolas,monospace;font-size:10.5px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);
+  }
+  .tile .value{font-size:26px;font-weight:650;line-height:1.15;letter-spacing:-.01em}
+  .tile .value small{font-size:14px;color:var(--ink3);font-weight:500}
+  .tile .note{font-size:12px;color:var(--ink2)}
+  .tile.t-ok .value{color:var(--ok)}
+  .tile.t-warn .value{color:var(--warn)}
+  .tile.t-access .value{color:var(--access)}
+
+  /* ───────────────────────── layout ───────────────────────── */
+  .main{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;align-items:start}
+  @media (max-width:920px){
+    .main{grid-template-columns:1fr}
+    .tiles{grid-template-columns:repeat(2,1fr)}
+  }
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    box-shadow:var(--shadow);overflow:hidden;
+  }
+  .card+.card{margin-top:14px}
+  .card-h{
+    display:flex;align-items:baseline;gap:10px;
+    padding:12px 16px 10px;border-bottom:1px solid var(--line);
+  }
+  .card-h h2{
+    margin:0;font-size:12px;font-weight:650;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink2);
+    font-family:ui-monospace,Consolas,monospace;
+  }
+  .card-h .hint{margin-left:auto;font-size:11.5px;color:var(--ink3)}
+
+  /* ───────────────────────── rotinas ───────────────────────── */
+  .rot{border-bottom:1px solid var(--line)}
+  .rot:last-child{border-bottom:0}
+  .rot-head{
+    display:flex;align-items:center;gap:12px;width:100%;
+    padding:12px 16px;background:none;border:0;color:inherit;font:inherit;
+    text-align:left;cursor:pointer;
+  }
+  .rot-head:hover{background:var(--surface2)}
+  .st{
+    display:inline-flex;align-items:center;gap:6px;flex:none;
+    font-family:ui-monospace,Consolas,monospace;font-size:10.5px;
+    letter-spacing:.08em;text-transform:uppercase;font-weight:600;
+    padding:3px 8px;border-radius:6px;
+  }
+  .st-ok    {color:var(--ok);    background:color-mix(in srgb,var(--ok) 13%,transparent)}
+  .st-warn  {color:var(--warn);  background:color-mix(in srgb,var(--warn) 15%,transparent)}
+  .st-crit  {color:var(--crit);  background:color-mix(in srgb,var(--crit) 14%,transparent)}
+  .st-run   {color:var(--accent);background:var(--accent-soft)}
+  .st-access{color:var(--access);background:color-mix(in srgb,var(--access) 15%,transparent)}
+  .st-idle  {color:var(--idle);  background:color-mix(in srgb,var(--idle) 14%,transparent)}
+  .pulse{width:7px;height:7px;border-radius:99px;background:var(--accent);animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+  @media (prefers-reduced-motion: reduce){.pulse{animation:none}}
+
+  .rot-name{font-weight:600;font-size:14.5px;letter-spacing:-.005em}
+  .rot-meta{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .rot-note{font-size:12px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rot-right{margin-left:auto;display:flex;align-items:center;gap:14px;flex:none}
+  .rot-time{font-size:12px;color:var(--ink3)}
+  .strip{display:flex;gap:3px}
+  .strip i{width:8px;height:14px;border-radius:2px;background:var(--ok);opacity:.85}
+  .strip i.w{background:var(--warn)} .strip i.c{background:var(--crit)}
+  .strip i.n{background:var(--line)}
+  .chev{color:var(--ink3);transition:transform .15s ease;flex:none}
+  .rot.open .chev{transform:rotate(90deg)}
+
+  .rot-body{display:none;padding:2px 16px 14px 16px;background:var(--surface2)}
+  .rot.open .rot-body{display:block}
+  .sub{
+    display:flex;align-items:center;gap:10px;padding:8px 0 8px 10px;
+    border-left:2px solid var(--line);margin-left:6px;
+  }
+  .sub+.sub{border-top:1px dashed color-mix(in srgb,var(--line) 60%,transparent)}
+  .sub .s-ic{flex:none;width:16px;text-align:center;font-size:12px}
+  .s-ok{color:var(--ok)} .s-warn{color:var(--warn)} .s-run{color:var(--accent)}
+  .sub .s-name{font-size:13px;font-weight:550}
+  .sub .s-det{font-size:12px;color:var(--ink2)}
+  .sub .s-time{margin-left:auto;font-size:11.5px;color:var(--ink3);flex:none}
+  .srcs{display:flex;gap:5px;margin-top:10px;flex-wrap:wrap}
+  .src{
+    font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.06em;
+    color:var(--ink3);border:1px solid var(--line);border-radius:5px;padding:2px 7px;
+    background:var(--surface);
+  }
+
+  /* ───────────────────────── alertas ───────────────────────── */
+  .alerts{list-style:none;margin:0;padding:6px 0}
+  .alerts li{display:flex;gap:10px;padding:9px 16px;align-items:flex-start}
+  .alerts li+li{border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent)}
+  .a-dot{flex:none;width:8px;height:8px;border-radius:99px;margin-top:5px}
+  .a-warn{background:var(--warn)} .a-crit{background:var(--crit)}
+  .a-access{background:var(--access)} .a-ok{background:var(--ok)}
+  .a-txt{font-size:12.5px;line-height:1.45}
+  .a-txt b{font-weight:600}
+  .a-sub{display:block;color:var(--ink3);font-size:11.5px}
+  .a-time{margin-left:auto;flex:none;font-size:11px;color:var(--ink3)}
+
+  /* ───────────────────────── mini chart ───────────────────────── */
+  .chart{padding:14px 16px 10px}
+  .bars{display:flex;align-items:flex-end;gap:4px;height:88px;position:relative}
+  .bars .target{
+    position:absolute;left:0;right:0;bottom:44px;border-top:1px dashed var(--ink3);
+    opacity:.55;
+  }
+  .bars .target span{
+    position:absolute;right:0;top:-16px;font-size:10px;color:var(--ink3);
+    font-family:ui-monospace,Consolas,monospace;
+  }
+  .bar{
+    flex:1;min-width:6px;background:var(--accent);opacity:.75;
+    border-radius:3px 3px 0 0;position:relative;cursor:default;
+  }
+  .bar:hover{opacity:1}
+  .bar.late{background:var(--warn);opacity:.9}
+  .bar .v{
+    position:absolute;top:-17px;left:50%;transform:translateX(-50%);
+    font-size:10px;color:var(--ink2);font-family:ui-monospace,Consolas,monospace;
+    white-space:nowrap;
+  }
+  .x-axis{display:flex;justify-content:space-between;margin-top:6px;
+    font-size:10px;color:var(--ink3);font-family:ui-monospace,Consolas,monospace}
+  .chart-cap{font-size:11.5px;color:var(--ink3);padding:0 16px 12px}
+
+  /* ───────────────────────── leveza ───────────────────────── */
+  .lev{padding:12px 16px 14px;display:flex;flex-direction:column;gap:10px}
+  .lev-row{display:flex;align-items:baseline;gap:8px}
+  .lev-row .k{font-family:ui-monospace,Consolas,monospace;font-size:10.5px;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);width:52px;flex:none}
+  .lev-row .v{font-weight:650;font-size:15px}
+  .lev-row .lim{font-size:11.5px;color:var(--ink3)}
+  .meter{flex:1;height:5px;border-radius:99px;background:var(--surface2);
+    border:1px solid var(--line);overflow:hidden}
+  .meter i{display:block;height:100%;background:var(--ok);border-radius:99px}
+
+  footer{
+    margin-top:18px;padding-top:12px;border-top:1px solid var(--line);
+    display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--ink3);
+  }
+  footer .sep{opacity:.5}
+</style>
+
+<div class="app">
+
+  <!-- ═════════ topbar ═════════ -->
+  <div class="topbar">
+    <div class="brand">
+      <span class="mark">ITER</span>
+      <span class="sub">Monitor Operacional · FIDC</span>
+    </div>
+    <div class="top-meta">
+      <span class="chip"><span class="dot"></span> HTML leve publicado <span class="mono">14:20</span></span>
+      <span class="chip"><span class="dot" style="background:var(--accent)"></span> Telegram ativo</span>
+      <span class="clock mono">qui <b>09 jul 2026</b> · <b id="clock">14:27:41</b></span>
+      <button class="theme-btn" id="themeBtn" type="button">◐ tema</button>
+    </div>
+  </div>
+
+  <!-- ═════════ tiles ═════════ -->
+  <div class="tiles">
+    <div class="tile t-ok">
+      <span class="label">Em dia</span>
+      <span class="value mono">4<small> /7</small></span>
+      <span class="note">rotinas com todas as etapas ok</span>
+    </div>
+    <div class="tile t-warn">
+      <span class="label">Atrasadas</span>
+      <span class="value mono">1</span>
+      <span class="note">Carteira Diária · D+0 não recebido</span>
+    </div>
+    <div class="tile t-access">
+      <span class="label">Acesso indisponível</span>
+      <span class="value mono">1</span>
+      <span class="note">Saldo Devedor · MCC Iron (e-mail)</span>
+    </div>
+    <div class="tile">
+      <span class="label">Alertas hoje</span>
+      <span class="value mono">3</span>
+      <span class="note">último às <span class="mono">11:02</span> · Telegram</span>
+    </div>
+  </div>
+
+  <!-- ═════════ main ═════════ -->
+  <div class="main">
+
+    <!-- coluna rotinas -->
+    <div class="card">
+      <div class="card-h">
+        <h2>Rotinas</h2>
+        <span class="hint">clique para expandir · histórico 14 dias →</span>
+      </div>
+
+      <!-- Estoque (expandida) -->
+      <div class="rot open">
+        <button class="rot-head" type="button" aria-expanded="true">
+          <span class="st st-ok">✓ ok</span>
+          <span class="rot-meta">
+            <span class="rot-name">Atualização de Estoque</span>
+            <span class="rot-note">Drive → SharePoint → BigQuery → validações · concluída 07:31</span>
+          </span>
+          <span class="rot-right">
+            <span class="strip" aria-hidden="true">
+              <i title="25/06 ok"></i><i title="26/06 ok"></i><i class="w" title="27/06 atraso 41 min"></i><i title="30/06 ok"></i><i title="01/07 ok"></i><i title="02/07 ok"></i><i title="03/07 ok"></i><i title="04/07 ok"></i><i class="n" title="05/07 sem expediente"></i><i class="n" title="06/07 sem expediente"></i><i title="07/07 ok"></i><i title="08/07 ok"></i><i title="09/07 ok"></i><i class="n" title="hoje"></i>
+            </span>
+            <span class="rot-time mono">07:31</span>
+            <span class="chev">›</span>
+          </span>
+        </button>
+        <div class="rot-body">
+          <div class="sub">
+            <span class="s-ic s-ok">✓</span>
+            <span class="s-name">Verificação de acesso</span>
+            <span class="s-det">Drive ✓ · SharePoint ✓ · BigQuery ✓</span>
+            <span class="s-time mono">07:00</span>
+          </div>
+          <div class="sub">
+            <span class="s-ic s-ok">✓</span>
+            <span class="s-name">Download Google Drive · Hemera</span>
+            <span class="s-det">14 arquivos · nomenclatura válida</span>
+            <span class="s-time mono">07:12</span>
+          </div>
+          <div class="sub">
+            <span class="s-ic s-ok">✓</span>
+            <span class="s-name">Upload SharePoint</span>
+            <span class="s-det">retenção 5d · histórico: Créd. Estruturado, B33</span>
+            <span class="s-time mono">07:18</span>
+          </div>
+          <div class="sub">
+            <span class="s-ic s-ok">✓</span>
+            <span class="s-name">Ingestão BigQuery · EstoquesGeral</span>
+            <span class="s-det">partição 2026-07-09 · 128.410 linhas (banda 30d ✓)</span>
+            <span class="s-time mono">07:31</span>
+          </div>
+          <div class="sub">
+            <span class="s-ic s-ok">✓</span>
+            <span class="s-name">Validações</span>
+            <span class="s-det">consistência ✓ · baixas ✓ · média móvel 30d ✓</span>
+            <span class="s-time mono">07:31</span>
+          </div>
+          <div class="srcs">
+            <span class="src">JSON·n8n</span><span class="src">BQ·EstoquesGeral</span>
+            <span class="src">XLSX·SharePoint</span><span class="src">log CSV ✓</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Carteira Diária -->
+      <div class="rot">
+        <button class="rot-head" type="button" aria-expanded="false">
+          <span class="st st-warn">▲ atraso</span>
+          <span class="rot-meta">
+            <span class="rot-name">Carteira Diária</span>
+            <span class="rot-note">arquivo D+0 (Vortx) não recebido até 11:00 · escalonado 2×</span>
+          </span>
+          <span class="rot-right">
+            <span class="strip" aria-hidden="true">
+              <i></i><i></i><i></i><i class="w"></i><i></i><i></i><i></i><i></i><i class="n"></i><i class="n"></i><i></i><i></i><i class="w" title="hoje: atrasada"></i><i class="n"></i>
+            </span>
+            <span class="rot-time mono">11:02</span>
+            <span class="chev">›</span>
+          </span>
+        </button>
+        <div class="rot-body">
+          <div class="sub">
+            <span class="s-ic s-ok">✓</span>
+            <span class="s-name">Verificação de acesso</span>
+            <span class="s-det">Vortx/Banvox alcançável</span>
+            <span class="s-time mono">07:00</span>
+          </div>
+          <div class="sub">
+            <span class="s-ic s-warn">▲</span>
+            <span class="s-name">Recebimento do arquivo D+0</span>
+            <span class="s-det">esperado até 11:00 · não recebido · último ok ontem 10:42</span>
+            <span class="s-time mono">11:02</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cessões -->
+      <div class="rot">
+        <button class="rot-head" type="button" aria-expanded="false">
+          <span class="st st-ok">✓ ok</span>
+          <span class="rot-meta">
+            <span class="rot-name">Atualização de Cessões</span>
+            <span class="rot-note">3 cessões processadas · sem divergências</span>
+          </span>
+          <span class="rot-right">
+            <span class="strip" aria-hidden="true">
+              <i></i><i></i><i></i><i></i><i></i><i class="c" title="02/07 erro de ingestão"></i><i></i><i></i><i class="n"></i><i class="n"></i><i></i><i></i><i></i><i class="n"></i>
+            </span>
+            <span class="rot-time mono">09:45</span>
+            <span class="chev">›</span>
+          </span>
+        </button>
+        <div class="rot-body">
+          <div class="sub"><span class="s-ic s-ok">✓</span><span class="s-name">Verificação de acesso</span><span class="s-time mono">07:00</span></div>
+          <div class="sub"><span class="s-ic s-ok">✓</span><span class="s-name">Processamento e conciliação</span><span class="s-det">3/3 cessões ok</span><span class="s-time mono">09:45</span></div>
+        </div>
+      </div>
+
+      <!-- AKRK -->
+      <div class="rot">
+        <button class="rot-head" type="button" aria-expanded="false">
+          <span class="st st-ok">✓ ok</span>
+          <span class="rot-meta">
+            <span class="rot-name">Monitoramento AKRK</span>
+            <span class="rot-note">indicadores dentro das bandas</span>
+          </span>
+          <span class="rot-right">
+            <span class="strip" aria-hidden="true">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="n"></i><i class="n"></i><i></i><i></i><i></i><i class="n"></i>
+            </span>
+            <span class="rot-time mono">08:20</span>
+            <span class="chev">›</span>
+          </span>
+        </button>
+        <div class="rot-body">
+          <div class="sub"><span class="s-ic s-ok">✓</span><span class="s-name">Verificação de acesso</span><span class="s-time mono">07:00</span></div>
+          <div class="sub"><span class="s-ic s-ok">✓</span><span class="s-name">Atualização de indicadores</span><span class="s-time mono">08:20</span></div>
+        </div>
+      </div>
+
+      <!-- Relatório DI -->
+      <div class="rot">
+        <button class="rot-head" type="button" aria-expanded="false">
+          <span class="st st-run"><span class="pulse"></span> exec</span>
+          <span class="rot-meta">
+            <span class="rot-name">Relatório DI</span>
+            <span class="rot-note">consultando B3 · iniciado 14:25 · etapa 2/4</span>
+          </span>
+          <span class="rot-right">
+            <span class="strip" aria-hidden="true">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="n"></i><i class="n"></i><i></i><i></i><i></i><i class="n"></i>
+            </span>
+            <span class="rot-time mono">14:25</span>
+            <span class="chev">›</span>
+          </span>
+        </button>
+        <div class="rot-body">
+          <div class="sub"><span class="s-ic s-ok">✓</span><span class="s-name">Verificação de acesso</span><span class="s-det">API B3 ✓ · BigQuery ✓</span><span class="s-time mono">14:25</span></div>
+          <div class="sub"><span class="s-ic s-run">●</span><span class="s-name">Consulta B3 · curva DI futuro</span><span class="s-det">em execução…</span><span class="s-time mono">14:25</span></div>
+        </div>
+      </div>
+
+      <!-- Lastros -->
+      <div class="rot">
+        <button class="rot-head" type="button" aria-expanded="false">
+          <span class="st st-ok">✓ ok</span>
+          <span class="rot-meta">
+            <span class="rot-name">Acompanhamento de Lastros</span>
+            <span class="rot-note">amostra do dia conferida</span>
+          </span>
+          <span class="rot-right">
+            <span class="strip" aria-hidden="true">
+              <i></i><i class="w"></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="n"></i><i class="n"></i><i></i><i></i><i></i><i class="n"></i>
+            </span>
+            <span class="rot-time mono">10:10</span>
+            <span class="chev">›</span>
+          </span>
+        </button>
+        <div class="rot-body">
+          <div class="sub"><span class="s-ic s-ok">✓</span><span class="s-name">Verificação de acesso</span><span class="s-time mono">07:00</span></div>
+          <div class="sub"><span class="s-ic s-ok">✓</span><span class="s-name">Conferência da amostra</span><span class="s-time mono">10:10</span></div>
+        </div>
+      </div>
+
+      <!-- Saldo Devedor -->
+      <div class="rot">
+        <button class="rot-head" type="button" aria-expanded="false">
+          <span class="st st-access">⚑ acesso</span>
+          <span class="rot-meta">
+            <span class="rot-name">Processo Saldo Devedor</span>
+            <span class="rot-note">MCC Iron sem acesso direto · e-mail solicitado há 2 dias · modo manual</span>
+          </span>
+          <span class="rot-right">
+            <span class="strip" aria-hidden="true">
+              <i class="n"></i><i class="n"></i><i></i><i class="n"></i><i class="n"></i><i></i><i class="n"></i><i class="n"></i><i class="n"></i><i class="n"></i><i class="n"></i><i></i><i class="n"></i><i class="n"></i>
+            </span>
+            <span class="rot-time mono">—</span>
+            <span class="chev">›</span>
+          </span>
+        </button>
+        <div class="rot-body">
+          <div class="sub">
+            <span class="s-ic s-warn">⚑</span>
+            <span class="s-name">Verificação de acesso</span>
+            <span class="s-det">dados chegam por e-mail sob demanda · responsável alertado</span>
+            <span class="s-time mono">07:00</span>
+          </div>
+          <div class="sub">
+            <span class="s-ic" style="color:var(--idle)">☐</span>
+            <span class="s-name">Checklist manual do dia</span>
+            <span class="s-det">aguardando retorno da administradora</span>
+            <span class="s-time mono">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- coluna lateral -->
+    <div>
+      <div class="card">
+        <div class="card-h"><h2>Últimos alertas</h2><span class="hint">Telegram</span></div>
+        <ul class="alerts">
+          <li>
+            <span class="a-dot a-warn"></span>
+            <span class="a-txt"><b>Carteira Diária</b> — arquivo D+0 não recebido (Vortx)
+              <span class="a-sub">re-alerta em 1 h se não resolver · 2ª escalada</span></span>
+            <span class="a-time mono">11:02</span>
+          </li>
+          <li>
+            <span class="a-dot a-access"></span>
+            <span class="a-txt"><b>Saldo Devedor</b> — fonte MCC Iron indisponível
+              <span class="a-sub">operar manualmente · responsável notificado</span></span>
+            <span class="a-time mono">09:14</span>
+          </li>
+          <li>
+            <span class="a-dot a-ok"></span>
+            <span class="a-txt"><b>Estoque</b> — média móvel 30d normalizada
+              <span class="a-sub">resolvido · aberto ontem 16:40</span></span>
+            <span class="a-time mono">07:31</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Ingestão Estoque</h2><span class="hint">min após 07:00 · 12 dias</span></div>
+        <div class="chart">
+          <div class="bars">
+            <div class="target" style="bottom:52px"><span>meta 45 min</span></div>
+            <div class="bar" style="height:38%" title="25/06 · 07:33"></div>
+            <div class="bar" style="height:42%" title="26/06 · 07:36"></div>
+            <div class="bar late" style="height:92%" title="27/06 · 08:21 — atraso"><span class="v">81</span></div>
+            <div class="bar" style="height:40%" title="30/06 · 07:35"></div>
+            <div class="bar" style="height:35%" title="01/07 · 07:31"></div>
+            <div class="bar" style="height:44%" title="02/07 · 07:39"></div>
+            <div class="bar" style="height:37%" title="03/07 · 07:32"></div>
+            <div class="bar" style="height:41%" title="04/07 · 07:36"></div>
+            <div class="bar" style="height:33%" title="07/07 · 07:29"><span class="v">29</span></div>
+            <div class="bar" style="height:39%" title="08/07 · 07:34"></div>
+            <div class="bar" style="height:36%" title="09/07 · 07:31"></div>
+          </div>
+          <div class="x-axis"><span>25/06</span><span>02/07</span><span>09/07</span></div>
+        </div>
+        <div class="chart-cap">data de referência ADM × ingestão BigQuery — a mesma trilha CSV que alimentará o Grafana.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Leveza</h2><span class="hint">orçamento do app</span></div>
+        <div class="lev">
+          <div class="lev-row">
+            <span class="k">RAM</span>
+            <span class="v mono">84 MB</span>
+            <span class="meter"><i style="width:70%"></i></span>
+            <span class="lim mono">&lt;120</span>
+          </div>
+          <div class="lev-row">
+            <span class="k">CPU</span>
+            <span class="v mono">0,3%</span>
+            <span class="meter"><i style="width:4%"></i></span>
+            <span class="lim mono">idle</span>
+          </div>
+          <div class="lev-row">
+            <span class="k">Uptime</span>
+            <span class="v mono">6 h 12</span>
+            <span class="meter"><i style="width:0"></i></span>
+            <span class="lim mono">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span>próxima varredura <b class="mono">14:30</b></span><span class="sep">·</span>
+    <span>estado local: SQLite (arquivo único)</span><span class="sep">·</span>
+    <span>export HTML a cada 10 min → SharePoint</span><span class="sep">·</span>
+    <span>mockup v0.1 — dados ilustrativos</span>
+  </footer>
+</div>
+
+<script>
+  // expandir/recolher rotinas
+  document.querySelectorAll('.rot-head').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var rot = btn.closest('.rot');
+      var open = rot.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  });
+  // relógio vivo (só para dar vida ao mockup)
+  var clock = document.getElementById('clock');
+  var base = new Date(); base.setHours(14,27,41,0);
+  var t0 = Date.now();
+  setInterval(function(){
+    var d = new Date(base.getTime() + (Date.now() - t0));
+    clock.textContent = d.toTimeString().slice(0,8);
+  }, 1000);
+  // alternador de tema
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    var r = document.documentElement;
+    var dark = matchMedia('(prefers-color-scheme: dark)').matches;
+    var cur = r.dataset.theme || (dark ? 'dark' : 'light');
+    r.dataset.theme = cur === 'dark' ? 'light' : 'dark';
+  });
+</script>
